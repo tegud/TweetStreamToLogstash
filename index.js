@@ -5,7 +5,7 @@ var fs = require('fs');
 var sentiment = require('sentiment');
 
 var credentialData = fs.readFileSync(__dirname + '/credentials.json', 'utf-8');
-var config = fs.readFileSync(__dirname + '/config.json', 'utf-8');
+var config = JSON.parse(fs.readFileSync(__dirname + '/config.json', 'utf-8'));
 var credentials = JSON.parse(credentialData);
 
 console.log(`Sending tweets with keywords "${config.keywords}" to ${config.host}:${config.port}`)
@@ -14,7 +14,7 @@ var T = new Twit(credentials);
 
 var socket = dgram.createSocket('udp4');
 
-var stream = T.stream('statuses/filter', { track: 'microsoft' })
+var stream = T.stream('statuses/filter', { track: config.keywords })
 
 stream.on('tweet', function (tweet) {
 	var logstash = {
