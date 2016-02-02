@@ -5,6 +5,7 @@ var fs = require('fs');
 var sentiment = require('sentiment');
 
 var credentialData = fs.readFileSync(__dirname + '/credentials.json', 'utf-8');
+var config = fs.readFileSync(__dirname + '/config.json', 'utf-8');
 var credentials = JSON.parse(credentialData);
 
 var T = new Twit(credentials);
@@ -26,7 +27,7 @@ stream.on('tweet', function (tweet) {
 	};
 	var message = new Buffer(JSON.stringify(logstash));
 
-	socket.send(message, 0, message.length, 2056, '192.168.10.12', function(err, bytes) {
+	socket.send(message, 0, message.length, config.port, config.host, function(err, bytes) {
 		if(err) {
 			console.log(err);
 		}
