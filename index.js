@@ -1,23 +1,48 @@
-var Twit = require('twit');
-var dgram = require('dgram');
-var moment = require('moment');
-var fs = require('fs');
-var sentiment = require('sentiment');
+const Twit = require('twit');
+const dgram = require('dgram');
+const moment = require('moment');
+const fs = require('fs');
+const sentiment = require('sentiment');
 
-var credentialData = fs.readFileSync(__dirname + '/credentials.json', 'utf-8');
-var config = JSON.parse(fs.readFileSync(__dirname + '/config.json', 'utf-8'));
-var credentials = JSON.parse(credentialData);
+function loadConfig() {
+	let credentialsFromFile;
+	let configFromFile;
+
+	try {
+		credentialsFromFile = JSON.parse(fs.readFileSync(__dirname + '/credentials.json', 'utf-8'));
+		configFromFile = JSON.parse(fs.readFileSync(__dirname + '/config.json', 'utf-8'));
+	}
+	catch(e) { }
+
+	return {
+		credentials: {
+			consumer_key: process.env.TWITTER_CONSUMER_KEY || credentialsFromFile.consumer_key,
+			consumer_secret: process.env.TWITTER_CONSUMER_SECRET || credentialsFromFile.consumer_secret,
+			access_token: process.env.TWITTER_ACCESS_TOKEN || credentialsFromFile.access_token,
+			access_token_secret: process.env.TWITTER_ACCESS_SECRET || credentialsFromFile.access_token_secret
+		},
+		config: {
+			host: process.env.TWITTER_LOGSTASH_HOST || configFromFile.host,
+			port: process.env.TWITTER_LOGSTASH_PORT || configFromFile.port,
+			keywords:process.env.TWITTER_KEYWORDS || configFromFile.keywords
+		}
+	};
+}
+
+const allConfig = loadConfig();
+const config = allConfig.config;
+const credentials = allConfig.credentials;
 
 console.log(`Sending tweets with keywords "${config.keywords}" to ${config.host}:${config.port}`)
 
-var T = new Twit(credentials);
+const T = new Twit(credentials);
 
-var socket = dgram.createSocket('udp4');
+const socket = dgram.createSocket('udp4');
 
-var stream = T.stream('statuses/filter', { track: config.keywords })
+const stream = T.stream('statuses/filter', { track: config.keywords })
 
 stream.on('tweet', function (tweet) {
-	var logstash = {
+	const logstash = {
 		'@timestamp': moment(tweet.created_at).toISOString(),
 		type: 'tweet',
 		content: tweet.text,
@@ -27,7 +52,7 @@ stream.on('tweet', function (tweet) {
 			handle: tweet.user.screen_name
 		}
 	};
-	var message = new Buffer(JSON.stringify(logstash));
+	const message = new Buffer(JSON.stringify(logstash));
 
 	socket.send(message, 0, message.length, config.port, config.host, function(err, bytes) {
 		if(err) {

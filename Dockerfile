@@ -1,4 +1,4 @@
-FROM node:4.2.2
+FROM node:8.0.0
 
 RUN mkdir -p /opt/tweet-router
 WORKDIR /opt/tweet-router

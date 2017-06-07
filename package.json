@@ -9,8 +9,8 @@
   "author": "Steve Elliott",
   "license": "ISC",
   "dependencies": {
-    "twit": "^1.1.14",
     "moment": "^2.6.0",
-    "sentiment": "^1.0.0-alpha"
+    "sentiment": "^1.0.0-alpha",
+    "twit": "^1.1.14"
   }
 }
